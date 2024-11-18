@@ -9,34 +9,27 @@ from streamlit.components.v1 import components
 import logging
 from typing import Tuple, List
 
-# Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Load ATC modules mapping
 @st.cache_resource
 def load_atc_modules() -> pd.DataFrame:
-    """Load ATC modules mapping from a CSV file."""
     try:
         return pd.read_csv('ATC_modules.csv')
     except FileNotFoundError:
         st.error("ATC_modules.csv file not found. Please upload it.")
         return pd.DataFrame(columns=['atc', 'module_number_atc'])
 
-# Map ATC code to module number
 def get_module_number(atc_code: str, atc_modules_df: pd.DataFrame) -> str:
-    """Return the module number for the given ATC code, or 'unknown' if not found."""
     module_row = atc_modules_df[atc_modules_df['atc'] == atc_code]
     if not module_row.empty:
         return str(module_row['module_number_atc'].iloc[0])
     return 'unknown'
 
-# Load model and preprocessors with caching
 @st.cache_resource
 def load_model():
-    """Load the trained MLPClassifier model."""
     try:
-        return joblib.load('mlp_model_deploy.joblib') #
+        return joblib.load('models/mlp_model_deploy.joblib') #
     except FileNotFoundError:
         st.error("Model file not found.")
         return None
@@ -45,10 +38,10 @@ def load_model():
 def load_preprocessing_objects():
     """Load preprocessing objects: imputer, scaler, encoder."""
     try:
-        num_imputer = joblib.load('num_imputer_deploy.joblib')
-        scaler = joblib.load('scaler_deploy.joblib')
-        cat_imputer = joblib.load('cat_imputer_deploy.joblib')
-        encoder = joblib.load('encoder_deploy.joblib')
+        num_imputer = joblib.load('models/num_imputer_deploy.joblib')
+        scaler = joblib.load('models/scaler_deploy.joblib')
+        cat_imputer = joblib.load('models/cat_imputer_deploy.joblib')
+        encoder = joblib.load('models/encoder_deploy.joblib')
         return num_imputer, scaler, cat_imputer, encoder
     except FileNotFoundError as e:
         st.error(f"Preprocessing file not found: {e}")
@@ -56,18 +49,16 @@ def load_preprocessing_objects():
 
 @st.cache_resource
 def load_shap_explainer():
-    """Load the SHAP explainer."""
     try:
-        return joblib.load('shap_explainer_deploy.joblib')
+        return joblib.load('models/shap_explainer_deploy.joblib')
     except FileNotFoundError:
         st.error("SHAP explainer file not found.")
         return None
 
 # Load feature names
 def load_feature_names() -> List[str]:
-    """Load feature names from file."""
     try:
-        with open('selected_features.txt', 'r') as f:
+        with open('models/selected_features.txt', 'r') as f:
             return [line.strip() for line in f]
     except FileNotFoundError:
         st.error("selected_features.txt not found.")
@@ -152,21 +143,14 @@ def user_input_features() -> pd.DataFrame:
 def preprocess_input(input_df):
     """Preprocess the user input data."""
     input_df = input_df[numerical_features + categorical_features]
-
-    # Numerical preprocessing
     X_num = scaler.transform(num_imputer.transform(input_df[numerical_features]))
-
-    # Categorical preprocessing
     X_cat = encoder.transform(cat_imputer.transform(input_df[categorical_features]))
-
-    # Combine features
     X_processed = np.hstack([X_num, X_cat])
 
     selected_feature_names = np.concatenate([numerical_features, encoder.get_feature_names_out(categorical_features)])
     return X_processed, selected_feature_names
 
 def st_shap(plot, height=None):
-    """Display a SHAP force plot in Streamlit with enforced horizontal scrolling."""
     shap_html = f"""
     <head>{shap.getjs()}</head>
     <div style="overflow-x: scroll; width: 100%; height: {height or 500}px;">
@@ -190,16 +174,13 @@ if st.sidebar.button('Predict'):
     st.subheader('SHAP Force Plot')
 
     try:
-        # Get SHAP values
         shap_values = explainer.shap_values(X_input)
         
         # Determine base value and SHAP values for single instance
         if isinstance(shap_values, list):
-            # Multi-output (e.g., binary classification)
             base_value = explainer.expected_value[1]  # Positive class expected value
-            shap_vals = shap_values[1][0]  # SHAP values for the positive class, first sample
+            shap_vals = shap_values[1][0] 
         else:
-            # Single-output model
             base_value = explainer.expected_value
             shap_vals = shap_values[0]
 
@@ -207,18 +188,16 @@ if st.sidebar.button('Predict'):
         force_plot = shap.force_plot(
             base_value,
             shap_vals,
-            X_input[0],  # First instance's feature values
+            X_input[0], 
             feature_names=selected_feature_names,
-            matplotlib=False  # Generate interactive HTML
+            matplotlib=False  
         )
-
-        # Display the force plot using st.components.v1.html
+        
         st_shap(force_plot)
 
     except Exception as e:
         st.error(f"Error generating SHAP force plot: {str(e)}")
 
-        # Fallback: Show SHAP summary plot
         st.write("Falling back to feature importance summary plot...")
         fig, ax = plt.subplots()
         if isinstance(shap_values, list):
