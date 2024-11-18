@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 @st.cache_resource
 def load_atc_modules() -> pd.DataFrame:
     try:
-        return pd.read_csv('ATC_modules.csv')
+        return pd.read_csv('models/ATC_modules.csv')
     except FileNotFoundError:
         st.error("ATC_modules.csv file not found. Please upload it.")
         return pd.DataFrame(columns=['atc', 'module_number_atc'])
