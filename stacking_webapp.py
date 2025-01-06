@@ -47,7 +47,7 @@ variable_descriptions = {
 def load_atc_modules() -> pd.DataFrame:
     """Load ATC modules mapping from a CSV file."""
     try:
-        return pd.read_csv('ATC_modules.csv')
+        return pd.read_csv('models\ATC_modules.csv')
     except FileNotFoundError:
         st.error("ATC_modules.csv file not found. Please upload it.")
         return pd.DataFrame(columns=['atc', 'module_number_atc'])
@@ -74,10 +74,10 @@ def load_model():
 def load_preprocessing_objects():
     """Load preprocessing objects: imputer, scaler, encoder."""
     try:
-        num_imputer = joblib.load('num_imputer_deploy.joblib')
-        scaler = joblib.load('scaler_deploy.joblib')
-        cat_imputer = joblib.load('cat_imputer_deploy.joblib')
-        encoder = joblib.load('encoder_deploy.joblib')
+        num_imputer = joblib.load('models\num_imputer_deploy.joblib')
+        scaler = joblib.load('models\scaler_deploy.joblib')
+        cat_imputer = joblib.load('models\cat_imputer_deploy.joblib')
+        encoder = joblib.load('models\encoder_deploy.joblib')
         return num_imputer, scaler, cat_imputer, encoder
     except FileNotFoundError as e:
         st.error(f"Preprocessing file not found: {e}")
@@ -87,7 +87,7 @@ def load_preprocessing_objects():
 def load_shap_explainer():
     """Load the SHAP explainer."""
     try:
-        return joblib.load('shap_explainer_deploy.joblib')
+        return joblib.load('models\shap_explainer_deploy.joblib')
     except FileNotFoundError:
         st.error("SHAP explainer file not found.")
         return None
@@ -96,7 +96,7 @@ def load_shap_explainer():
 def load_feature_names() -> List[str]:
     """Load feature names from file."""
     try:
-        with open('selected_features.txt', 'r') as f:
+        with open('models\selected_features.txt', 'r') as f:
             return [line.strip() for line in f]
     except FileNotFoundError:
         st.error("selected_features.txt not found.")
