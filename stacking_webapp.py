@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from streamlit.components.v1 import components
 import logging
 from typing import Tuple, List
+import base64
 
 
 # Set up logging
@@ -296,4 +297,48 @@ if st.sidebar.button('Predict'):
             shap.summary_plot(shap_values, X_input, feature_names=selected_feature_names, show=False)
         st.pyplot(fig)
 
+# Convert the image to a base64 string
+def image_to_base64(image_path):
+    with open(image_path, "rb") as img_file:
+        return base64.b64encode(img_file.read()).decode('utf-8')
+
+# Load your image from a local path
+image_path = (r"models/cartoon.JPG")
+# Get the base64 string of the image
+image_base64 = image_to_base64(image_path)
+
+# Display your image and name in the top right corner
+st.markdown(
+    f"""
+    <style>
+    .header {{
+        position: absolute;  /* Fix the position */
+        top: -60px;  /* Adjust as needed */
+        right: -40px;  /* Align to the right */
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        padding: 10px;
+        flex-direction: column; /* Stack items vertically */
+        text-align: center; /* Ensures text is centrally aligned */
+    }}
+    .header img {{
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        margin-bottom: 5px; /* Space between image and text */
+    }}
+    .header-text {{
+        font-size: 12px;
+        font-weight: normal; /* Regular weight for text */
+        text-align: center;
+    }}
+    </style>
+    <div class="header">
+        <img src="data:image/jpeg;base64,{image_base64}" alt="Mohsen Askar">
+        <div class="header-text">Developed by: Mohsen Askar</div>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
