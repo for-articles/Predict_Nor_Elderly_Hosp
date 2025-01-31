@@ -312,11 +312,15 @@ st.markdown(
     f"""
     <style>
     .header {{
+        position: absolute;  /* Fix the position */
+        top: -60px;  /* Adjust as needed */
+        right: -40px;  /* Align to the right */
         display: flex;
         justify-content: flex-end;
         align-items: center;
         padding: 10px;
         flex-direction: column; /* Stack items vertically */
+        text-align: center; /* Ensures text is centrally aligned */
     }}
     .header img {{
         border-radius: 50%;
@@ -325,7 +329,7 @@ st.markdown(
         margin-bottom: 5px; /* Space between image and text */
     }}
     .header-text {{
-        font-size: 16px;
+        font-size: 12px;
         font-weight: normal; /* Regular weight for text */
         text-align: center;
     }}
@@ -337,3 +341,4 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
